@@ -95,7 +95,14 @@ tests:
         - r-sessioninfo
         - r-varnish
     script:
-      - Rscript -e "testthat::test_file('tests/testthat.R', stop_on_failure=TRUE)"
+      # rattler-build normalizes LANG/LC_ALL to C.UTF-8, which makes gettext
+      # ignore language switching and fails sandpaper's translation tests,
+      # so restore a real locale (shipped with the CI docker images)
+      - export LANG=en_US.UTF-8 LC_ALL=en_US.UTF-8
+      # use R -e (not Rscript): Rscript implies --no-echo, which makes
+      # renv >=1.2 load projects quietly and fails a sandpaper test that
+      # expects renv startup output
+      - R -e "testthat::test_file('tests/testthat.R', stop_on_failure=TRUE)"
 
 about:
   license: MIT
