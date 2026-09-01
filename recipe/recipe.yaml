@@ -1,31 +1,22 @@
-{% set version = "0.21.0" %}
-{% set posix = 'm2-' if win else '' %}
+schema_version: 1
+
+context:
+  version: "0.21.0"
 
 package:
   name: r-sandpaper
-  version: {{ version|replace("-", "_") }}
+  version: ${{ version }}
 
 source:
-  url: https://github.com/carpentries/sandpaper/archive/refs/tags/{{ version }}.tar.gz
+  url: https://github.com/carpentries/sandpaper/archive/refs/tags/${{ version }}.tar.gz
   sha256: 22e27bf89b34151dad4a511bb8469833d9cc1b3dcd7afaf83dcef54d2778af5c
 
 build:
   number: 0
   noarch: generic
-  rpaths:
-    - lib/R/lib/
-    - lib/
-  missing_dso_whitelist:
-    - '*/R.dll'        # [win]
-    - '*/Rblas.dll'    # [win]
-    - '*/Rlapack.dll'  # [win]
+  script: ${{ R }} CMD INSTALL --build .
 
 requirements:
-  build:
-    - {{ posix }}filesystem        # [win]
-    - {{ posix }}git
-    - {{ posix }}zip               # [win]
-    - cross-r-base {{ r_base }}    # [build_platform != target_platform]
   host:
     - r-base
     - r-assertthat
@@ -56,6 +47,7 @@ requirements:
     - r-yaml
     - r-r.utils
     - r-xfun
+    - r-nanonext >=1.8.0
   run:
     - r-base
     - r-assertthat
@@ -86,24 +78,26 @@ requirements:
     - r-yaml
     - r-r.utils
     - r-xfun
+    - r-nanonext >=1.8.0
 
-test:
-  requires:
-    - git            # [not win]
-    - r-testthat     # [not win]
-    - r-mockr        # [not win]
-    - r-sessioninfo  # [not win]
-    - r-varnish      # [not win]
-  source_files:
-    - tests/
-  commands:
-    - $R -e "library('sandpaper')"  # [not win]
-    - $R -e "testthat::test_file('tests/testthat.R', stop_on_failure=TRUE)"  # [not win]
-    - "\"%R%\" -e \"library('sandpaper')\""  # [win]
-    #- "\"%R%\" -e \"testthat::test_file('tests/testthat.R', stop_on_failure=TRUE)\""  # [win]
+tests:
+  - r:
+      libraries:
+        - sandpaper
+  - files:
+      source:
+        - tests/
+    requirements:
+      run:
+        - git
+        - r-testthat
+        - r-mockr
+        - r-sessioninfo
+        - r-varnish
+    script:
+      - Rscript -e "testthat::test_file('tests/testthat.R', stop_on_failure=TRUE)"
 
 about:
-  home: https://carpentries.github.io/sandpaper/
   license: MIT
   summary: Create and Curate Carpentries Lessons
   description: |
@@ -118,12 +112,12 @@ about:
     Much of the functionality in this package is inspired by
     [Jenny Bryan's](https://jennybryan.org/) work with the
     [{usethis}](https://usethis.r-lib.org/) package.
-  license_family: MIT
   license_file:
-    - '{{ environ["PREFIX"] }}/lib/R/share/licenses/MIT'
+    - ${{ PREFIX }}/lib/R/share/licenses/MIT
     - LICENSE
-  dev_url: https://github.com/carpentries/sandpaper/
-  doc_url: https://carpentries.github.io/sandpaper/
+  homepage: https://carpentries.github.io/sandpaper/
+  repository: https://github.com/carpentries/sandpaper/
+  documentation: https://carpentries.github.io/sandpaper/
 
 extra:
   recipe-maintainers:
